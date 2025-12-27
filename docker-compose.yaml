@@ -48,7 +48,7 @@ services:
       dockerfile: ../docker/Dockerfile.frontend
     container_name: aktualisasi-frontend
     ports:
-      - "${FRONTEND_PORT}:8080"
+      - "127.0.0.1:${FRONTEND_PORT}:8080"
     networks:
       - aktualisasi-network
     depends_on:
