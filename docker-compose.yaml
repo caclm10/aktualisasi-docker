@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: aktualisasi-database
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - aktualisasi-database:/var/lib/mysql
+    networks:
+      - aktualisasi-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: aktualisasi-backend
+    expose:
+      - "9000"
+    volumes:
+      - aktualisasi-storage:/var/www/storage
+    env_file:
+      - .env
+    networks:
+      - aktualisasi-network
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: aktualisasi-frontend
+    ports:
+      - "${FRONTEND_PORT}:8080"
+    networks:
+      - aktualisasi-network
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  aktualisasi-network:
+
+volumes:
+  aktualisasi-database:
+  aktualisasi-storage:

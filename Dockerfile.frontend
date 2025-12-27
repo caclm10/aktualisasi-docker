@@ -1,0 +1,49 @@
+# =========================================
+# Stage 1: Build the React.js Application with Bun
+# =========================================
+ARG BUN_VERSION=1
+ARG NGINX_VERSION=alpine3.22
+
+# Gunakan image official Bun
+FROM oven/bun:${BUN_VERSION} AS builder
+
+WORKDIR /app
+
+# Copy package.json dan bun.lockb (pengganti package-lock.json)
+COPY package.json bun.lock[b] ./
+
+# Install dependencies menggunakan bun install --frozen-lockfile
+# (Sama fungsinya dengan npm ci: memastikan versi persis sama dengan lockfile)
+RUN bun install --frozen-lockfile
+
+# Copy seluruh source code
+COPY . .
+
+# Build aplikasi
+# Catatan: Jika script "build" di package.json Anda masih ada "tsc", 
+# dan Anda ingin bypass error TypeScript, ganti baris ini menjadi: RUN bun x vite build
+RUN bun x vite build
+
+# =========================================
+# Stage 2: Prepare Nginx to Serve Static Files
+# =========================================
+
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS runner
+
+# Use a built-in non-root user for security best practices
+USER nginx
+
+# Copy custom Nginx config
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy hasil build dari stage 'builder'
+# Pastikan folder output build Anda adalah 'dist' (default Vite/Bun)
+COPY --chown=nginx:nginx --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 8080 to allow HTTP traffic
+# Note: The default NGINX Unprivileged container listens on port 8080
+EXPOSE 8080
+
+# Start Nginx directly with custom config
+ENTRYPOINT ["nginx", "-c", "/etc/nginx/nginx.conf"]
+CMD ["-g", "daemon off;"]
