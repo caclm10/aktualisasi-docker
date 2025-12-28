@@ -43,7 +43,7 @@ docker compose exec -T backend rm -f /var/www/bootstrap/cache/services.php
 # ==========================================
 echo "📦 Running Migration & Seeder..."
 # --force digunakan agar tidak minta konfirmasi Yes/No (langsung jalan)
-docker compose exec -T backend php artisan migrate --seed --force
+docker compose exec -T backend php artisan migrate --fresh --seed --force
 
 # ==========================================
 # 5. OPTIMIZE
