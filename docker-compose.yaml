@@ -14,7 +14,11 @@ services:
     networks:
       - aktualisasi-network
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,6 +53,8 @@ services:
     container_name: aktualisasi-frontend
     ports:
       - "127.0.0.1:${FRONTEND_PORT}:8080"
+    volumes:
+      - aktualisasi-storage:/var/www/storage:ro
     networks:
       - aktualisasi-network
     depends_on:
