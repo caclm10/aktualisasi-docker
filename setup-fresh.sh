@@ -6,7 +6,7 @@
 # Hentikan script jika ada command yang error
 set -e
 
-echo "🚀 Starting Setup..."
+echo "🚀 Starting Fresh Setup..."
 
 # ==========================================
 # 1. COPY FILE .ENV (Host -> Container)
@@ -34,7 +34,16 @@ docker compose exec -T backend php artisan key:generate
 # ==========================================
 # Wajib dilakukan agar key baru terbaca
 echo "🧹 Clearing cache config..."
-docker compose exec -T backend php artisan optimize:clear
+docker compose exec -T backend rm -f /var/www/bootstrap/cache/config.php
+docker compose exec -T backend rm -f /var/www/bootstrap/cache/packages.php
+docker compose exec -T backend rm -f /var/www/bootstrap/cache/services.php
+
+# ==========================================
+# 5. DATABASE MIGRATION & SEED
+# ==========================================
+echo "📦 Running Migration & Seeder..."
+# --force digunakan agar tidak minta konfirmasi Yes/No (langsung jalan)
+docker compose exec -T backend php artisan migrate:fresh --seed --force
 
 # ==========================================
 # 5. OPTIMIZE
@@ -43,9 +52,9 @@ echo "🚀 Optimizing..."
 docker compose exec -T backend php artisan optimize
 
 # ==========================================
-# 6. STORAGE LINK
+# 7. STORAGE LINK
 # ==========================================
 echo "🔗 Linking Storage..."
 docker compose exec -T backend php artisan storage:link
 
-echo "✅ Done Setup!"
+echo "✅ Done Fresh Setup!"
